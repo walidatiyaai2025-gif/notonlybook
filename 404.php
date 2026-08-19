@@ -1,0 +1,3 @@
+<?php
+/** 404 template; intentionally ad-free. @package NotOnlyBook_Modern */
+get_header(); ?><main id="main" class="nob-section"><div class="nob-container"><div class="nob-empty"><span class="nob-kicker">404</span><h1><?php esc_html_e('This resource has moved or does not exist','notonlybook-modern'); ?></h1><p><?php esc_html_e('Search the learning library or return to the homepage.','notonlybook-modern'); ?></p><?php get_search_form(); ?><p><a class="nob-btn" href="<?php echo esc_url(home_url('/')); ?>"><?php esc_html_e('Back to homepage','notonlybook-modern'); ?></a></p></div></div></main><?php get_footer(); ?>
