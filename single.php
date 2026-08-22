@@ -6,6 +6,7 @@ get_header(); ?>
 		<div class="nob-content-grid">
 			<div class="nob-main-panel">
 				<?php while ( have_posts() ) : the_post(); ?>
+					<?php $placeholder = get_template_directory_uri() . '/assets/images/post-placeholder.svg'; ?>
 					<article <?php post_class( 'nob-article' ); ?>>
 						<header class="nob-article-header">
 							<?php nob_breadcrumbs(); ?>
@@ -19,9 +20,13 @@ get_header(); ?>
 							</div>
 						</header>
 
-						<?php if ( has_post_thumbnail() ) : ?>
-							<div class="nob-article-hero"><?php the_post_thumbnail( 'large', array( 'loading' => 'eager', 'fetchpriority' => 'high', 'decoding' => 'async' ) ); ?></div>
-						<?php endif; ?>
+						<div class="nob-article-hero">
+							<?php if ( has_post_thumbnail() ) : ?>
+								<?php the_post_thumbnail( 'large', array( 'loading' => 'eager', 'fetchpriority' => 'high', 'decoding' => 'async' ) ); ?>
+							<?php else : ?>
+								<img src="<?php echo esc_url( $placeholder ); ?>" alt="<?php echo esc_attr__( 'NotOnlyBook learning resource illustration', 'notonlybook-modern' ); ?>" width="1200" height="675" decoding="async">
+							<?php endif; ?>
+						</div>
 
 						<div class="entry-content">
 							<?php the_content(); wp_link_pages(); ?>
@@ -57,7 +62,7 @@ get_header(); ?>
 										if ( has_post_thumbnail( $nav_post ) ) {
 											echo get_the_post_thumbnail( $nav_post, 'nob-nav-thumb', array( 'loading' => 'lazy', 'decoding' => 'async' ) );
 										} else {
-											echo '<span class="nob-card-placeholder">N</span>';
+											echo '<img src="' . esc_url( $placeholder ) . '" alt="" loading="lazy" decoding="async" width="150" height="150">';
 										}
 										?>
 									</span>
