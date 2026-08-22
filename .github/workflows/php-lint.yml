@@ -25,3 +25,23 @@ jobs:
           while IFS= read -r -d '' file; do
             php -l "$file"
           done < <(find . -type f -name '*.php' -print0)
+      - name: Build installable WordPress theme ZIP
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build/notonlybook-modern
+          rsync -a ./ build/notonlybook-modern/ \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'build/'
+          cd build
+          zip -qr notonlybook-modern.zip notonlybook-modern
+      - name: Upload installable theme ZIP
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: notonlybook-modern-theme
+          path: build/notonlybook-modern.zip
+          if-no-files-found: error
+          retention-days: 14
