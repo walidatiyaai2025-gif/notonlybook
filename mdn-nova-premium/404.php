@@ -1,0 +1,1 @@
+<?php get_header();?><section class="page-hero"><div class="container"><h1>404</h1><p>عذرًا، الصفحة التي تبحث عنها غير موجودة.</p><a class="btn" href="<?php echo esc_url(home_url('/'));?>">العودة للرئيسية</a></div></section><?php get_footer();?>

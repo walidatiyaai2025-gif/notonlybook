@@ -1,0 +1,1 @@
+<?php get_header();while(have_posts()):the_post();?><section class="page-hero"><div class="container"><h1><?php the_title();?></h1></div></section><div class="container content-wrap"><article class="entry-content"><?php the_content();wp_link_pages();?></article></div><?php endwhile;get_footer();?>
