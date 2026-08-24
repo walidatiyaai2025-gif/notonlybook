@@ -1,1 +1,1 @@
-<section class="card"><h2><?php esc_html_e('لا توجد نتائج','mdn-nova');?></h2><p><?php esc_html_e('جرّب البحث بكلمات أخرى.','mdn-nova');?></p><?php get_search_form();?></section>
+<section class="card"><h2><?php echo esc_html(mdn_nova_t('لا توجد نتائج','No results found')); ?></h2><p><?php echo esc_html(mdn_nova_t('جرّب البحث بكلمات أخرى.','Try searching with different keywords.')); ?></p><?php get_search_form();?></section>
