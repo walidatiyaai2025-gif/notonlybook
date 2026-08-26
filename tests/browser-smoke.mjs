@@ -29,7 +29,10 @@ for (const viewport of viewports) {
 
   page.on('pageerror', error => fail(`${viewport.name}: pageerror: ${error.message}`));
   page.on('console', message => {
-    if (message.type() === 'error') fail(`${viewport.name}: console error: ${message.text()}`);
+    if (message.type() !== 'error') return;
+    const source = message.location().url || '';
+    if (source.endsWith('/favicon.ico')) return; // wp-env fixture has no configured Site Icon; not a theme runtime asset.
+    fail(`${viewport.name}: console error: ${message.text()}${source ? ` (${source})` : ''}`);
   });
 
   for (const [name, route] of routes) {
@@ -67,6 +70,7 @@ for (const viewport of viewports) {
     await searchToggle.press('Enter');
     checks++;
     if ((await searchToggle.getAttribute('aria-expanded')) !== 'true') fail(`${viewport.name}: search toggle did not open with keyboard`);
+    await page.waitForTimeout(75); // Theme deliberately transfers focus after the disclosure is rendered.
     checks++;
     const searchFieldFocused = await page.locator('#nob-header-search input[type="search"]').evaluate(el => el === document.activeElement);
     if (!searchFieldFocused) fail(`${viewport.name}: opened search did not move focus to search field`);
