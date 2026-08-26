@@ -74,7 +74,7 @@ $assert(!preg_match('/fonts\.(googleapis|gstatic)\.com/i', $style . $functions .
 $assert(str_contains($functions, "add_theme_support( 'title-tag' )"), 'WordPress title-tag support');
 $assert(str_contains($functions, "add_theme_support( 'post-thumbnails' )"), 'featured image support');
 $assert(str_contains($functions, "add_theme_support( 'responsive-embeds' )"), 'responsive embed support');
-$assert(str_contains($functions, "register_nav_menus"), 'navigation registration');
+$assert(str_contains($functions, 'register_nav_menus'), 'navigation registration');
 $assert(str_contains($functions, 'nob_fallback_menu'), 'safe fallback navigation');
 $assert(str_contains($functions, 'nob_add_automatic_toc'), 'automatic TOC capability');
 $assert(str_contains($functions, 'nob_insert_incontent_ads'), 'in-content ad placement engine');
@@ -86,7 +86,7 @@ $assert(str_contains($header, 'aria-expanded="false"'), 'menu/search disclosure 
 $assert(str_contains($header, 'aria-controls="nob-mobile-panel"'), 'mobile navigation control wired');
 $assert(str_contains($header, 'aria-controls="nob-header-search"'), 'search control wired');
 $assert(str_contains($js, "event.key==='Escape'"), 'Escape closes disclosure UI');
-$assert(str_contains($js, "field.focus()"), 'opened search receives keyboard focus');
+$assert(str_contains($js, 'field.focus()'), 'opened search receives keyboard focus');
 
 $assert(str_contains($footer, 'nob_legal_links()'), 'footer exposes trust/policy links');
 $assert(str_contains($front, 'role="search"'), 'homepage search is semantic');
@@ -140,6 +140,9 @@ foreach ($runtimeFiles as $file) {
     $relative = ltrim(str_replace($root, '', $file), '/');
     $content = file_get_contents($file) ?: '';
     foreach ($forbiddenPatterns as $pattern => $label) {
+        if ('inc/content-health.php' === $relative && in_array($label, ['Soledad demo domain', 'example.com placeholder domain'], true)) {
+            continue; // These signatures are intentionally used by the read-only detector.
+        }
         $assert(!preg_match($pattern, $content), $relative . ': no ' . $label);
     }
 }
