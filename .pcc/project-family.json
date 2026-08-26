@@ -1,5 +1,5 @@
 {
-  "SCHEMA_VERSION": "1.0.0",
+  "SCHEMA_VERSION": "1.1.0",
   "FAMILY_ID": "NOTONLYBOOK",
   "PROJECT_MODEL": "PRODUCT_FAMILY",
   "REPOSITORY": "walidatiyaai2025-gif/notonlybook",
@@ -7,9 +7,11 @@
   "WORKER_ENTRYPOINT": "PCC_ROUTING_PACKET",
   "CONSTITUTION_PATH": "AGENTS.md",
   "FAMILY_MANIFEST_PATH": ".pcc/project-family.json",
+  "ONBOARDING_NORMALIZATION_STATE": "READY",
+  "VARIANT_GOVERNANCE_STATE": "PARTIAL",
   "RELATIONSHIP_MODEL": "SHARED_PRODUCT_ANCESTRY_WITH_CLIENT_VARIANTS",
-  "SHARED_CORE_STATE": "TO_BE_MAPPED",
-  "BOUNDARY_STATE": "UNRESOLVED",
+  "SHARED_CORE_STATE": "UNRESOLVED",
+  "CORE_ROUTING_STATE": "BLOCKED_UNRESOLVED",
   "VARIANTS": [
     {
       "VARIANT_ID": "NOTONLYBOOK",
@@ -17,13 +19,12 @@
       "TYPE": "PRIMARY",
       "STATUS": "ACTIVE",
       "DERIVED_FROM": null,
-      "ALIASES": [
-        "notonlybook",
-        "not only book"
-      ],
-      "IMPLEMENTATION_LOCATION": "UNRESOLVED",
-      "PRODUCTION_TARGET": null,
-      "CHANGE_BOUNDARY_STATE": "REQUIRES_DISCOVERY"
+      "ALIASES": ["notonlybook", "not only book"],
+      "IMPLEMENTATION_LOCATION": ".",
+      "IMPLEMENTATION_LOCATION_STATE": "MAPPED",
+      "ROUTING_STATE": "READY",
+      "BOUNDARY_EVIDENCE_SHA": "409bac608ecb4727d56efb7649be64934800e5cd",
+      "PRODUCTION_TARGET": null
     },
     {
       "VARIANT_ID": "ARABIASWONDERS",
@@ -31,14 +32,12 @@
       "TYPE": "CLIENT_VARIANT",
       "STATUS": "ACTIVE",
       "DERIVED_FROM": "NOTONLYBOOK",
-      "ALIASES": [
-        "arabiaswonder",
-        "arabiaswonders",
-        "arabias wonders"
-      ],
-      "IMPLEMENTATION_LOCATION": "UNRESOLVED",
-      "PRODUCTION_TARGET": null,
-      "CHANGE_BOUNDARY_STATE": "REQUIRES_DISCOVERY"
+      "ALIASES": ["arabiaswonder", "arabiaswonders", "arabias wonders"],
+      "IMPLEMENTATION_LOCATION": null,
+      "IMPLEMENTATION_LOCATION_STATE": "UNRESOLVED",
+      "ROUTING_STATE": "BLOCKED_UNRESOLVED",
+      "BOUNDARY_EVIDENCE_SHA": "409bac608ecb4727d56efb7649be64934800e5cd",
+      "PRODUCTION_TARGET": null
     }
   ],
   "ROUTING_RULES": {

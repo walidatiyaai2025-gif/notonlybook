@@ -1,74 +1,74 @@
 # Repository Constitution — NotOnlyBook Product Family
 
-This repository is a **PRODUCT FAMILY**, not a single undifferentiated client build.
+This repository is a **PRODUCT_FAMILY** governed through the Project Control Center (PCC).
 
-## Authoritative worker entrypoint
+## Authoritative entrypoint
 
-Every implementation worker MUST start from a Project Control Center routing packet before modifying code.
+Every implementation Worker, Manager, Lead, QA, Integration, or Release role MUST begin with the PCC routing decision and then read this constitution plus `.pcc/project-family.json`.
 
-Authoritative routing authority:
-
+Routing authority:
 `walidatiyaai2025-gif/project-control-center`
 
-The routing packet must identify at minimum:
-- `PROJECT_ID`
-- `REPOSITORY`
-- `TARGET_SCOPE`
-- `TARGET_VARIANT` when scope is variant-specific
-- `CONSTITUTION_PATH`
-- `FAMILY_MANIFEST_PATH`
-- the permitted change boundary
+No implementation write is allowed without `ROUTING_STATUS=ROUTED` for the requested boundary. If routing is absent, stale, blocked, or contradicts live repository evidence, return `ROUTING_REQUIRED` or `ROUTING_CONFLICT` and do not guess.
 
-If a worker does not have an authoritative routing packet, it may inspect the repository read-only, but MUST NOT make implementation changes. It must return `ROUTING_REQUIRED` instead of guessing the client, variant, branch, or change scope.
+## Product-family identity
 
-## Owner-declared variants
+Known active variants:
 
-This family currently contains two active variants:
+1. `NOTONLYBOOK` — primary variant.
+2. `ARABIASWONDERS` — owner-declared client variant derived from this product family.
 
-1. `NOTONLYBOOK` — primary product variant.
-2. `ARABIASWONDERS` — client variant derived from the same product family.
-
-Aliases such as `arabiaswonder`, `arabiaswonders`, and `Arabias Wonders` all resolve to `ARABIASWONDERS`.
+Aliases `arabiaswonder`, `arabiaswonders`, and `Arabias Wonders` resolve to `ARABIASWONDERS`.
 
 The machine-readable authority is `.pcc/project-family.json`.
 
+## Current verified physical boundaries
+
+Evidence at source SHA `409bac608ecb4727d56efb7649be64934800e5cd` establishes the current repository-root WordPress theme as the `NOTONLYBOOK` implementation: its theme metadata identifies `NotOnlyBook Modern`, `https://notonlybook.com/`, and author `NotOnlyBook`.
+
+Therefore:
+- `NOTONLYBOOK`: implementation location `.`; routing state `READY`.
+- `ARABIASWONDERS`: implementation location is not proven in current live repository evidence; routing state `BLOCKED_UNRESOLVED`.
+- shared-core boundary: not proven independently; `CORE_ROUTING_STATE=BLOCKED_UNRESOLVED`.
+
+A blocked/unresolved variant is still a real registered business/product identity. It MUST NOT be materialized by inventing a folder, permanent client branch, external repository, domain, deployment target, or copied source merely to make routing pass.
+
 ## Change-boundary law
 
-Before editing any file, the worker must classify each intended change as one of:
-- `SHARED_CORE`
-- `NOTONLYBOOK_ONLY`
-- `ARABIASWONDERS_ONLY`
-- `UNKNOWN`
+Before editing code, the Worker must use the PCC packet to establish exactly one allowed scope:
+- `CORE`
+- `VARIANT:NOTONLYBOOK`
+- `VARIANT:ARABIASWONDERS`
 
-`UNKNOWN` is a write blocker. The worker must investigate and establish the boundary before modifying code.
+Current consequences:
+- `VARIANT:NOTONLYBOOK` may proceed only when PCC routes it to implementation location `.`.
+- `VARIANT:ARABIASWONDERS` is write-blocked until PCC and this manifest are amended with verified implementation evidence.
+- `CORE` is write-blocked until a shared-core boundary is verified.
 
-A client-specific request must not leak branding, configuration, content, deployment settings, or behavior into another variant.
+Client-specific branding, configuration, content, deployment settings, or behavior must never leak into another variant.
 
-A shared-core change must be treated as potentially affecting every active variant and requires cross-variant validation before completion.
+## No branch-as-client identity
 
-## Physical layout is evidence-driven
+A Git branch is temporary implementation state, not long-lived client identity. Do not infer a variant from a branch name and do not create permanent client branches as a substitute for explicit family governance.
 
-Do not infer variant identity from branch names. Long-lived client identity is defined by the family manifest and PCC routing, not by a branch naming convention.
+## Durable decision law
 
-The current physical implementation locations of the variants must be discovered from live repository evidence and then recorded in `.pcc/project-family.json`. Until a location is verified, it remains `UNRESOLVED`; workers must not invent directories, branches, domains, or deployment targets.
+Any durable decision that changes family identity, variant aliases, implementation locations, shared-core boundaries, or routing state must be persisted in BOTH:
+1. this repository's `.pcc/project-family.json` / constitution as applicable; and
+2. PCC committed routing/policy state.
 
-## Branch and merge rules
+Conversation, Worker memory, and temporary prompts are not canonical governance. A replacement Manager/Lead must be able to reconstruct the model from committed GitHub state alone.
 
-- A task branch is temporary implementation state, not a client identity.
-- Do not create permanent divergent client branches as a substitute for an explicit variant architecture unless the owner authorizes that model.
-- Shared fixes should be implemented once at the correct shared boundary wherever the repository architecture supports that safely.
-- Variant-only fixes must remain isolated to the routed variant.
-- Never merge a variant-specific customization into shared code merely to make a test pass.
+## Build / QA / release identity
 
-## Build and release identity
+Every build, QA result, package, deployment record, and release artifact must identify the target variant and exact source SHA. Generic family artifacts with ambiguous target identity are non-authoritative.
 
-Any build, package, deployment evidence, or release artifact for this product family must identify the target variant. A generic artifact with an ambiguous target is not authoritative release evidence.
-
-## Required read order for workers
+## Required read order
 
 1. This `AGENTS.md`.
 2. `.pcc/project-family.json`.
-3. The Project Control Center routing packet supplied for the task.
-4. Task-specific repository evidence and applicable project documentation.
+3. `.pcc/managed-repository-control.json`.
+4. The current PCC routing packet.
+5. Task-specific repository evidence.
 
-If these sources conflict, stop implementation and return the conflict to the Project Control Center for routing reconciliation.
+If they conflict, stop writes and escalate the conflict to PCC for constitutional/routing reconciliation.
