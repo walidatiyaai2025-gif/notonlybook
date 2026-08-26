@@ -1,0 +1,13 @@
+{
+  "CONTROL_PLANE_REPOSITORY": "walidatiyaai2025-gif/project-control-center",
+  "CONTROL_PLANE_VERSION": "v1.6.0",
+  "CONTROL_PLANE_SHA": "d89c2d27ecb8cc01e4baa8a4e61cbf59e1ca3581",
+  "PROJECT_ID": "NOTONLYBOOK",
+  "DESIRED_POLICY_VERSION": "1.1.0",
+  "POLICY_ENFORCEMENT_MODE": "OBSERVE",
+  "CANONICAL_STATUS_PATH": "portfolio/status/fleet-live.json",
+  "PROJECT_PROFILE_PATH": "portfolio/projects.yml",
+  "WRITE_AUTHORIZED": false,
+  "CANONICAL_DEVELOPMENT_LINEAGE": "UNRESOLVED",
+  "LAST_CONTROL_PLANE_SYNC": "2026-08-26T21:39:42Z"
+}
