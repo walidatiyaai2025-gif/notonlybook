@@ -1,6 +1,17 @@
 # NotOnlyBook Modern WordPress Theme
 
-A custom WordPress theme for **notonlybook.com**, designed around the existing educational-resource database and its IGCSE/Cambridge taxonomy.
+A custom WordPress theme product family originating from **notonlybook.com**, designed around the existing educational-resource database and its IGCSE/Cambridge taxonomy.
+
+## Product family and worker routing
+
+This repository is governed as a **Product Family** with two owner-declared active variants:
+
+- `NOTONLYBOOK` — primary product variant.
+- `ARABIASWONDERS` — client variant derived from the same family.
+
+Workers must not guess which variant a request belongs to. Before implementation, read `AGENTS.md` and `.pcc/project-family.json` and obtain an authoritative routing packet from `walidatiyaai2025-gif/project-control-center` identifying `TARGET_SCOPE` and, for client-specific work, `TARGET_VARIANT`.
+
+The physical code/deployment boundary between the variants is currently evidence-driven and must be discovered and recorded; branch names are not authoritative variant identity.
 
 ## What this theme changes
 
@@ -20,9 +31,9 @@ A custom WordPress theme for **notonlybook.com**, designed around the existing e
 
 ## Install
 
-1. Download/zip the repository as `notonlybook-modern.zip`.
+1. Obtain the build/package for the intended routed variant; do not use an ambiguous family artifact for production.
 2. In WordPress: **Appearance → Themes → Add New → Upload Theme**.
-3. Activate **NotOnlyBook Modern**.
+3. Activate the routed theme build.
 4. Go to **Appearance → Menus** and assign your main menu to **Primary navigation**.
 5. Go to **Appearance → Customize → AdSense placements** only if you want manual ad units.
 6. Keep Google Site Kit / AdSense Privacy & messaging configured for consent and account-level integration.
@@ -33,5 +44,7 @@ A custom WordPress theme for **notonlybook.com**, designed around the existing e
 A theme can make ad placement, navigation, performance and trust pages much safer, but it cannot guarantee AdSense approval. Approval also depends on content originality/value, copyright/licensing, account status, traffic quality and current Google Publisher policies.
 
 See:
+- `AGENTS.md`
+- `.pcc/project-family.json`
 - `docs/ADSENSE-CHECKLIST.md`
 - `docs/DATA-AUDIT.md`
