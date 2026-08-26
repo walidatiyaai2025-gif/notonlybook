@@ -19,12 +19,9 @@ const routes = [
 ];
 
 const browser = await chromium.launch();
-let failures = [];
+const failures = [];
 let checks = 0;
-
-function fail(message) {
-  failures.push(message);
-}
+const fail = message => failures.push(message);
 
 for (const viewport of viewports) {
   const context = await browser.newContext({ viewport });
@@ -32,9 +29,7 @@ for (const viewport of viewports) {
 
   page.on('pageerror', error => fail(`${viewport.name}: pageerror: ${error.message}`));
   page.on('console', message => {
-    if (message.type() === 'error') {
-      fail(`${viewport.name}: console error: ${message.text()}`);
-    }
+    if (message.type() === 'error') fail(`${viewport.name}: console error: ${message.text()}`);
   });
 
   for (const [name, route] of routes) {
@@ -46,34 +41,20 @@ for (const viewport of viewports) {
     }
 
     checks++;
-    if ((await page.locator('main#main').count()) !== 1) {
-      fail(`${viewport.name}/${name}: expected one main#main landmark`);
-    }
+    if ((await page.locator('main#main').count()) !== 1) fail(`${viewport.name}/${name}: expected one main#main landmark`);
 
-    const overflow = await page.evaluate(() => ({
-      scroll: document.documentElement.scrollWidth,
-      client: document.documentElement.clientWidth,
-    }));
+    const overflow = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
     checks++;
-    if (overflow.scroll > overflow.client + 1) {
-      fail(`${viewport.name}/${name}: horizontal overflow ${overflow.scroll} > ${overflow.client}`);
-    }
+    if (overflow.scroll > overflow.client + 1) fail(`${viewport.name}/${name}: horizontal overflow ${overflow.scroll} > ${overflow.client}`);
 
     const imagesMissingAlt = await page.locator('img:not([alt])').count();
     checks++;
-    if (imagesMissingAlt > 0) {
-      fail(`${viewport.name}/${name}: ${imagesMissingAlt} image(s) missing alt attribute`);
-    }
+    if (imagesMissingAlt > 0) fail(`${viewport.name}/${name}: ${imagesMissingAlt} image(s) missing alt attribute`);
 
     await page.evaluate(() => document.documentElement.setAttribute('dir', 'rtl'));
-    const rtlOverflow = await page.evaluate(() => ({
-      scroll: document.documentElement.scrollWidth,
-      client: document.documentElement.clientWidth,
-    }));
+    const rtlOverflow = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
     checks++;
-    if (rtlOverflow.scroll > rtlOverflow.client + 1) {
-      fail(`${viewport.name}/${name}: RTL horizontal overflow ${rtlOverflow.scroll} > ${rtlOverflow.client}`);
-    }
+    if (rtlOverflow.scroll > rtlOverflow.client + 1) fail(`${viewport.name}/${name}: RTL horizontal overflow ${rtlOverflow.scroll} > ${rtlOverflow.client}`);
     await page.evaluate(() => document.documentElement.removeAttribute('dir'));
   }
 
@@ -82,23 +63,16 @@ for (const viewport of viewports) {
   if (await searchToggle.isVisible()) {
     await searchToggle.focus();
     checks++;
-    if (!(await searchToggle.evaluate(el => el === document.activeElement))) {
-      fail(`${viewport.name}: search toggle cannot receive keyboard focus`);
-    }
+    if (!(await searchToggle.evaluate(el => el === document.activeElement))) fail(`${viewport.name}: search toggle cannot receive keyboard focus`);
     await searchToggle.press('Enter');
     checks++;
-    if ((await searchToggle.getAttribute('aria-expanded')) !== 'true') {
-      fail(`${viewport.name}: search toggle did not open with keyboard`);
-    }
+    if ((await searchToggle.getAttribute('aria-expanded')) !== 'true') fail(`${viewport.name}: search toggle did not open with keyboard`);
     checks++;
-    if (!(await page.locator('#nob-header-search input[type="search"]').isFocused())) {
-      fail(`${viewport.name}: opened search did not move focus to search field`);
-    }
+    const searchFieldFocused = await page.locator('#nob-header-search input[type="search"]').evaluate(el => el === document.activeElement);
+    if (!searchFieldFocused) fail(`${viewport.name}: opened search did not move focus to search field`);
     await page.keyboard.press('Escape');
     checks++;
-    if ((await searchToggle.getAttribute('aria-expanded')) !== 'false') {
-      fail(`${viewport.name}: Escape did not close search disclosure`);
-    }
+    if ((await searchToggle.getAttribute('aria-expanded')) !== 'false') fail(`${viewport.name}: Escape did not close search disclosure`);
   }
 
   const menuToggle = page.locator('.nob-menu-toggle');
@@ -106,25 +80,18 @@ for (const viewport of viewports) {
     await menuToggle.focus();
     await menuToggle.press('Enter');
     checks++;
-    if ((await menuToggle.getAttribute('aria-expanded')) !== 'true') {
-      fail(`${viewport.name}: mobile menu did not open with keyboard`);
-    }
+    if ((await menuToggle.getAttribute('aria-expanded')) !== 'true') fail(`${viewport.name}: mobile menu did not open with keyboard`);
     checks++;
-    if (await page.locator('#nob-mobile-panel').getAttribute('hidden') !== null) {
-      fail(`${viewport.name}: mobile panel remained hidden after open`);
-    }
+    if ((await page.locator('#nob-mobile-panel').getAttribute('hidden')) !== null) fail(`${viewport.name}: mobile panel remained hidden after open`);
     await page.keyboard.press('Escape');
     checks++;
-    if ((await menuToggle.getAttribute('aria-expanded')) !== 'false') {
-      fail(`${viewport.name}: Escape did not close mobile menu`);
-    }
+    if ((await menuToggle.getAttribute('aria-expanded')) !== 'false') fail(`${viewport.name}: Escape did not close mobile menu`);
   }
 
   await context.close();
 }
 
 await browser.close();
-
 console.log(`NOTONLYBOOK browser smoke: ${checks} checks, ${failures.length} failures`);
 if (failures.length) {
   for (const failure of failures) console.error(`FAIL: ${failure}`);
