@@ -1,0 +1,170 @@
+name: NOTONLYBOOK Closure Gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'closure/**'
+
+permissions:
+  contents: read
+
+jobs:
+  quality-and-package:
+    name: Quality + exact-SHA package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+
+      - name: Show runtimes
+        run: |
+          php --version
+          node --version
+
+      - name: Lint all PHP
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            php -l "$file"
+          done < <(find . -type f -name '*.php' -not -path './build/*' -print0)
+
+      - name: Validate theme JavaScript syntax
+        run: node --check assets/js/theme.js
+
+      - name: Run NOTONLYBOOK production contract
+        run: php tests/theme-contract.php
+
+      - name: Build runtime-only installable theme
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="build/notonlybook-modern"
+          rm -rf build
+          mkdir -p "$root"
+
+          runtime_files=(
+            404.php
+            archive.php
+            comments.php
+            footer.php
+            front-page.php
+            functions.php
+            header.php
+            index.php
+            page.php
+            search.php
+            sidebar.php
+            single.php
+            style.css
+            theme.json
+          )
+          for file in "${runtime_files[@]}"; do
+            cp "$file" "$root/$file"
+          done
+          cp -R assets inc template-parts "$root/"
+
+          cat > "$root/BUILD-MANIFEST.json" <<JSON
+          {
+            "artifact": "notonlybook-modern.zip",
+            "project": "NOTONLYBOOK",
+            "variant": "NOTONLYBOOK",
+            "theme": "NotOnlyBook Modern",
+            "sourceSha": "${GITHUB_SHA}",
+            "workflowRunId": "${GITHUB_RUN_ID}"
+          }
+          JSON
+
+          (
+            cd build
+            zip -qr notonlybook-modern.zip notonlybook-modern
+            sha256sum notonlybook-modern.zip > notonlybook-modern.zip.sha256
+          )
+
+      - name: Verify package shape and provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          zip="build/notonlybook-modern.zip"
+          test -s "$zip"
+          entries="$(unzip -Z1 "$zip")"
+
+          required=(
+            notonlybook-modern/style.css
+            notonlybook-modern/functions.php
+            notonlybook-modern/comments.php
+            notonlybook-modern/BUILD-MANIFEST.json
+            notonlybook-modern/assets/js/theme.js
+            notonlybook-modern/inc/adsense.php
+          )
+          for entry in "${required[@]}"; do
+            grep -Fxq "$entry" <<<"$entries"
+          done
+
+          if grep -Eq '(^|/)(\.git|\.github|\.pcc|docs|tests|build)(/|$)|(^|/)(AGENTS\.md|README\.md|\.wp-env\.json)$' <<<"$entries"; then
+            echo 'Development/governance material leaked into installable ZIP.' >&2
+            exit 1
+          fi
+
+          manifest_sha="$(unzip -p "$zip" notonlybook-modern/BUILD-MANIFEST.json | php -r '$d=json_decode(stream_get_contents(STDIN), true); echo $d["sourceSha"] ?? "";')"
+          test "$manifest_sha" = "$GITHUB_SHA"
+
+          if unzip -p "$zip" 'notonlybook-modern/*' 2>/dev/null | grep -Eaq -- '-----BEGIN ([A-Z ]+ )?PRIVATE KEY-----|AKIA[0-9A-Z]{16}'; then
+            echo 'Potential secret material detected in package.' >&2
+            exit 1
+          fi
+
+          sha256sum -c build/notonlybook-modern.zip.sha256
+
+      - name: Upload exact-SHA release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: notonlybook-modern-NOTONLYBOOK-${{ github.sha }}
+          path: |
+            build/notonlybook-modern.zip
+            build/notonlybook-modern.zip.sha256
+            build/notonlybook-modern/BUILD-MANIFEST.json
+          if-no-files-found: error
+          retention-days: 30
+
+  browser-smoke:
+    name: WordPress responsive + keyboard smoke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install runtime test tooling
+        run: |
+          npm install --no-save @wordpress/env playwright
+          npx playwright install --with-deps chromium
+
+      - name: Start isolated WordPress
+        run: npx wp-env start
+
+      - name: Activate NOTONLYBOOK theme and seed deterministic content
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wp-env run cli wp theme activate notonlybook || npx wp-env run cli wp theme activate notonlybook-modern
+          npx wp-env run cli wp option update blogname 'NotOnlyBook Closure QA'
+          npx wp-env run cli wp option update blogdescription 'Verified educational resource theme QA fixture'
+          npx wp-env run cli wp post update 1 --post_status=publish --comment_status=open --post_title='Closure QA learning resource with a deliberately long responsive title' --post_content='<h2>Overview</h2><p>This closure fixture verifies responsive article rendering, keyboard navigation, comments and real WordPress template composition.</p><h2>Practice</h2><p>Use the current syllabus and official examination-board guidance alongside learning resources.</p><h2>Reference table</h2><table><tr><th>Resource</th><th>Reference</th></tr><tr><td>Practice material</td><td>https://notonlybook.com/a-very-long-reference-path-used-to-prove-responsive-overflow-containment</td></tr></table>'
+          npx wp-env run cli wp post update 2 --post_status=publish --post_title='Closure QA trust page' --post_content='<p>This page verifies the standard ad-free page template.</p>'
+          npx wp-env run cli wp comment create --comment_post_ID=1 --comment_content='A deterministic QA comment.' --comment_author='Closure QA' --comment_author_email='qa@example.invalid' --comment_approved=1
+
+      - name: Run responsive, RTL and keyboard smoke
+        env:
+          NOB_BASE_URL: http://127.0.0.1:8888
+        run: node tests/browser-smoke.mjs
+
+      - name: Stop isolated WordPress
+        if: always()
+        run: npx wp-env stop
