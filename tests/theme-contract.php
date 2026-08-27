@@ -94,7 +94,7 @@ foreach (['*.php','inc/*.php','template-parts/*.php','assets/js/*.js','style.css
 $runtime = array_values(array_unique($runtime));
 $forbidden = [
     '/javascript\s*:/i' => 'javascript: URL',
-    '/href\s*=\s*["\x27]#["\x27]/i' => 'literal dead href',
+    '/href\s*=\s*(["\x27])#\1/i' => 'literal dead href',
     '/\b(var_dump|print_r)\s*\(/i' => 'PHP debug output',
     '/console\.log\s*\(/i' => 'JavaScript debug output',
     '/\b(TODO|FIXME)\b/' => 'unresolved TODO/FIXME',
