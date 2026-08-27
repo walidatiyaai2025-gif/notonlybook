@@ -28,6 +28,7 @@ $header = $read('header.php');
 $footer = $read('footer.php');
 $front = $read('front-page.php');
 $single = $read('single.php');
+$sidebar = $read('sidebar.php');
 $comments = $read('comments.php');
 $adsense = $read('inc/adsense.php');
 $seo = $read('inc/seo.php');
@@ -59,6 +60,7 @@ $contracts = [
     [str_contains($front, 'role="search"'), 'semantic homepage search'],
     [str_contains($front, 'wp_count_posts'), 'real WordPress homepage statistics'],
     [str_contains($single, 'comments_template()'), 'comments exposed intentionally'],
+    [str_contains($sidebar, 'min-width:0;max-width:100%'), 'responsive sidebar may shrink below intrinsic widget width'],
     [str_contains($comments, 'wp_list_comments'), 'theme-owned comment list'],
     [str_contains($comments, 'comment_form'), 'theme-owned comment form'],
     [str_contains($comments, 'the_comments_pagination'), 'comment pagination'],
@@ -86,15 +88,20 @@ $contracts = [
 foreach ($contracts as [$ok, $message]) $assert((bool)$ok, $message);
 
 $runtime = [];
-foreach (['*.php','inc/*.php','template-parts/*.php','assets/js/*.js'] as $glob) {
+foreach (['*.php','inc/*.php','template-parts/*.php','assets/js/*.js','style.css','assets/images/*.svg'] as $glob) {
     foreach (glob($root . '/' . $glob) ?: [] as $file) if (is_file($file)) $runtime[] = $file;
 }
 $runtime = array_values(array_unique($runtime));
 $forbidden = [
     '/javascript\s*:/i' => 'javascript: URL',
+    '/href\s*=\s*["\x27]#["\x27]/i' => 'literal dead href',
     '/\b(var_dump|print_r)\s*\(/i' => 'PHP debug output',
     '/console\.log\s*\(/i' => 'JavaScript debug output',
     '/\b(TODO|FIXME)\b/' => 'unresolved TODO/FIXME',
+    '/\bNotImplemented\b/i' => 'NotImplemented residue',
+    '/\bARABIASWONDERS\b/i' => 'cross-variant ARABIASWONDERS residue',
+    '/\bwp_redirect\s*\(/i' => 'unsafe WordPress redirect primitive',
+    '/header\s*\(\s*["\x27]Location\s*:/i' => 'raw Location redirect',
 ];
 $rawInputs = ['/\$_GET\s*\[/','/\$_POST\s*\[/','/\$_REQUEST\s*\[/','/\$_COOKIE\s*\[/','/\$_FILES\s*\[/'];
 foreach ($runtime as $file) {

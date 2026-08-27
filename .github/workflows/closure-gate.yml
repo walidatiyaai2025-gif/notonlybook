@@ -14,14 +14,19 @@ jobs:
   quality-and-package:
     name: Quality + exact-SHA package
     runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - name: Checkout exact candidate
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_SHA }}
 
       - name: Show runtimes
         run: |
           php --version
           node --version
+          echo "SOURCE_SHA=${SOURCE_SHA}"
 
       - name: Lint all PHP
         shell: bash
@@ -72,7 +77,7 @@ jobs:
             "project": "NOTONLYBOOK",
             "variant": "NOTONLYBOOK",
             "theme": "NotOnlyBook Modern",
-            "sourceSha": "${GITHUB_SHA}",
+            "sourceSha": "${SOURCE_SHA}",
             "workflowRunId": "${GITHUB_RUN_ID}"
           }
           JSON
@@ -109,7 +114,7 @@ jobs:
           fi
 
           manifest_sha="$(unzip -p "$zip" notonlybook-modern/BUILD-MANIFEST.json | php -r '$d=json_decode(stream_get_contents(STDIN), true); echo $d["sourceSha"] ?? "";')"
-          test "$manifest_sha" = "$GITHUB_SHA"
+          test "$manifest_sha" = "$SOURCE_SHA"
 
           if unzip -p "$zip" 'notonlybook-modern/*' 2>/dev/null | grep -Eaq -- '-----BEGIN ([A-Z ]+ )?PRIVATE KEY-----|AKIA[0-9A-Z]{16}'; then
             echo 'Potential secret material detected in package.' >&2
@@ -121,7 +126,7 @@ jobs:
       - name: Upload exact-SHA release artifact
         uses: actions/upload-artifact@v4
         with:
-          name: notonlybook-modern-NOTONLYBOOK-${{ github.sha }}
+          name: notonlybook-modern-NOTONLYBOOK-${{ env.SOURCE_SHA }}
           path: |
             build/notonlybook-modern.zip
             build/notonlybook-modern.zip.sha256
@@ -132,9 +137,13 @@ jobs:
   browser-smoke:
     name: WordPress responsive + keyboard smoke
     runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - name: Checkout exact candidate
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_SHA }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
