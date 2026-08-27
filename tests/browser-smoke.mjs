@@ -26,16 +26,19 @@ const fail = message => failures.push(message);
 for (const viewport of viewports) {
   const context = await browser.newContext({ viewport });
   const page = await context.newPage();
+  let activeRoute = '';
 
   page.on('pageerror', error => fail(`${viewport.name}: pageerror: ${error.message}`));
   page.on('console', message => {
     if (message.type() !== 'error') return;
     const source = message.location().url || '';
     if (source.endsWith('/favicon.ico')) return; // wp-env fixture has no configured Site Icon; not a theme runtime asset.
+    if (activeRoute === '404' && source.includes('/notonlybook-closure-missing-route/')) return; // The test intentionally requests this missing URL to exercise 404.php.
     fail(`${viewport.name}: console error: ${message.text()}${source ? ` (${source})` : ''}`);
   });
 
   for (const [name, route] of routes) {
+    activeRoute = name;
     const response = await page.goto(new URL(route, base).toString(), { waitUntil: 'networkidle' });
     checks++;
     if (!response || response.status() >= 500) {
@@ -48,7 +51,29 @@ for (const viewport of viewports) {
 
     const overflow = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
     checks++;
-    if (overflow.scroll > overflow.client + 1) fail(`${viewport.name}/${name}: horizontal overflow ${overflow.scroll} > ${overflow.client}`);
+    if (overflow.scroll > overflow.client + 1) {
+      const offenders = await page.evaluate(() => {
+        const viewportWidth = document.documentElement.clientWidth;
+        return Array.from(document.querySelectorAll('body *'))
+          .map(element => {
+            const rect = element.getBoundingClientRect();
+            return {
+              tag: element.tagName.toLowerCase(),
+              id: element.id || '',
+              className: typeof element.className === 'string' ? element.className : '',
+              left: Math.round(rect.left),
+              right: Math.round(rect.right),
+              width: Math.round(rect.width),
+              clientWidth: element.clientWidth,
+              scrollWidth: element.scrollWidth,
+            };
+          })
+          .filter(item => item.right > viewportWidth + 1 || item.left < -1 || (item.clientWidth > 0 && item.scrollWidth > item.clientWidth + 1))
+          .sort((a, b) => Math.max(b.right - viewportWidth, -b.left, b.scrollWidth - b.clientWidth) - Math.max(a.right - viewportWidth, -a.left, a.scrollWidth - a.clientWidth))
+          .slice(0, 12);
+      });
+      fail(`${viewport.name}/${name}: horizontal overflow ${overflow.scroll} > ${overflow.client}; offenders=${JSON.stringify(offenders)}`);
+    }
 
     const imagesMissingAlt = await page.locator('img:not([alt])').count();
     checks++;
@@ -57,10 +82,33 @@ for (const viewport of viewports) {
     await page.evaluate(() => document.documentElement.setAttribute('dir', 'rtl'));
     const rtlOverflow = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
     checks++;
-    if (rtlOverflow.scroll > rtlOverflow.client + 1) fail(`${viewport.name}/${name}: RTL horizontal overflow ${rtlOverflow.scroll} > ${rtlOverflow.client}`);
+    if (rtlOverflow.scroll > rtlOverflow.client + 1) {
+      const offenders = await page.evaluate(() => {
+        const viewportWidth = document.documentElement.clientWidth;
+        return Array.from(document.querySelectorAll('body *'))
+          .map(element => {
+            const rect = element.getBoundingClientRect();
+            return {
+              tag: element.tagName.toLowerCase(),
+              id: element.id || '',
+              className: typeof element.className === 'string' ? element.className : '',
+              left: Math.round(rect.left),
+              right: Math.round(rect.right),
+              width: Math.round(rect.width),
+              clientWidth: element.clientWidth,
+              scrollWidth: element.scrollWidth,
+            };
+          })
+          .filter(item => item.right > viewportWidth + 1 || item.left < -1 || (item.clientWidth > 0 && item.scrollWidth > item.clientWidth + 1))
+          .sort((a, b) => Math.max(b.right - viewportWidth, -b.left, b.scrollWidth - b.clientWidth) - Math.max(a.right - viewportWidth, -a.left, a.scrollWidth - a.clientWidth))
+          .slice(0, 12);
+      });
+      fail(`${viewport.name}/${name}: RTL horizontal overflow ${rtlOverflow.scroll} > ${rtlOverflow.client}; offenders=${JSON.stringify(offenders)}`);
+    }
     await page.evaluate(() => document.documentElement.removeAttribute('dir'));
   }
 
+  activeRoute = 'home-keyboard';
   await page.goto(base, { waitUntil: 'networkidle' });
   const searchToggle = page.locator('.nob-search-toggle');
   if (await searchToggle.isVisible()) {
