@@ -1,7 +1,7 @@
 <?php
 /** Article sidebar. @package NotOnlyBook_Modern */
 ?>
-<aside class="nob-sidebar" aria-label="<?php esc_attr_e( 'Article sidebar', 'notonlybook-modern' ); ?>">
+<aside class="nob-sidebar" style="min-width:0;max-width:100%" aria-label="<?php esc_attr_e( 'Article sidebar', 'notonlybook-modern' ); ?>">
 	<?php if ( is_active_sidebar( 'article-sidebar' ) ) : ?>
 		<?php dynamic_sidebar( 'article-sidebar' ); ?>
 	<?php else : ?>
